@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CYBER-ARENA 3D FPS | 1v1 Bot Duel</title>
+  <meta name="description" content="Action-packed 3D First-Person Shooter in a futuristic cyber arena. Fight a computer AI opponent using Arrow Keys and Spacebar!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- 3D Canvas Viewport -->
+  <div id="game-container"></div>
+
+  <!-- Damage Flash Vignette -->
+  <div id="damage-vignette"></div>
+
+  <!-- HUD Overlay -->
+  <div id="hud">
+    <!-- Top Bar: Scores and Round -->
+    <header class="hud-header glass-card">
+      <div class="stat-box player-score-box">
+        <span class="stat-label">PLAYER</span>
+        <span class="stat-value" id="player-score">0</span>
+      </div>
+      
+      <div class="round-box">
+        <span class="round-title">ROUND <span id="round-number">1</span></span>
+        <span class="game-timer" id="game-timer">02:00</span>
+      </div>
+
+      <div class="stat-box ai-score-box">
+        <span class="stat-label">CYBER-BOT</span>
+        <span class="stat-value" id="ai-score">0</span>
+      </div>
+    </header>
+
+    <!-- Futuristic Visor Corner Frames -->
+    <div class="visor-corner top-left"></div>
+    <div class="visor-corner top-right"></div>
+    <div class="visor-corner bottom-left"></div>
+    <div class="visor-corner bottom-right"></div>
+
+    <!-- Mouse Lock Prompt Overlay -->
+    <div id="mouse-lock-prompt" class="glass-card">
+      <span class="prompt-icon">🎯</span> CLICK GAME SCREEN TO LOCK MOUSE AIM
+    </div>
+
+    <!-- 3D Target Tracking Lock Bracket -->
+    <div id="target-lock-box" class="hidden">
+      <div class="lock-corner tl"></div>
+      <div class="lock-corner tr"></div>
+      <div class="lock-corner bl"></div>
+      <div class="lock-corner br"></div>
+      <div class="lock-info">
+        <span id="target-lock-dist">15m</span>
+        <span class="lock-tag">TARGET LOCKED</span>
+      </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div id="crosshair">
+      <div class="ch-line top"></div>
+      <div class="ch-line bottom"></div>
+      <div class="ch-line left"></div>
+      <div class="ch-line right"></div>
+      <div class="ch-dot"></div>
+      <div class="hit-marker" id="hit-marker"></div>
+    </div>
+
+    <!-- Left HUD: Player Status & Minimap -->
+    <div class="hud-left">
+      <!-- Minimap Radar -->
+      <div class="minimap-container glass-card">
+        <div class="minimap-header">RADAR SENSOR</div>
+        <canvas id="minimap" width="160" height="160"></canvas>
+      </div>
+
+      <!-- Player Health & Armor -->
+      <div class="status-card glass-card">
+        <div class="bar-group">
+          <div class="bar-header">
+            <span>HEALTH</span>
+            <span id="player-hp-text">100 / 100</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill hp-fill" id="player-hp-bar" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="bar-group">
+          <div class="bar-header">
+            <span>SHIELD</span>
+            <span id="player-shield-text">100 / 100</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill shield-fill" id="player-shield-bar" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right HUD: Opponent Health & Weapon Status -->
+    <div class="hud-right">
+      <!-- AI Health Card -->
+      <div class="status-card ai-card glass-card">
+        <div class="ai-status-header">
+          <span class="ai-tag">TARGET</span>
+          <span class="ai-name" id="ai-status-label">MECH-BOT V1 [PATROL]</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ai-hp-fill" id="ai-hp-bar" style="width: 100%;"></div>
+        </div>
+        <div class="ai-hp-text" id="ai-hp-text">100% HEALTH</div>
+      </div>
+
+      <!-- Weapon Ammo / Heat -->
+      <div class="status-card weapon-card glass-card">
+        <div class="weapon-info">
+          <span class="weapon-name">PLASMA RIFLE</span>
+          <span class="weapon-status" id="weapon-heat-text">READY</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill heat-fill" id="weapon-heat-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Visualizer Overlay (Active Key Indicator) -->
+    <div id="controls-indicator" class="glass-card">
+      <div class="key-group d-pad">
+        <div class="key-row">
+          <div class="key-btn" id="key-up" title="Move Forward">▲</div>
+        </div>
+        <div class="key-row">
+          <div class="key-btn" id="key-left" title="Turn Left">◄</div>
+          <div class="key-btn" id="key-down" title="Move Backward">▼</div>
+          <div class="key-btn" id="key-right" title="Turn Right">►</div>
+        </div>
+      </div>
+      <div class="key-group space-group">
+        <div class="key-btn space-btn" id="key-space">SPACE [SHOOT]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Menu Screen Modal -->
+  <div id="start-screen" class="modal-overlay active">
+    <div class="modal-card glass-card">
+      <div class="logo-box">
+        <h1 class="game-title">CYBER<span>ARENA</span> 3D</h1>
+        <p class="game-subtitle">1v1 FIRST PERSON TACTICAL DUEL</p>
+      </div>
+
+      <div class="instructions-box glass-card">
+        <h3><span>🎮</span> CONTROLS INSTRUCTIONS</h3>
+        <div class="controls-grid">
+          <div class="control-item">
+            <span class="kbd">▲</span> / <span class="kbd">▼</span>
+            <span class="desc">Move Forward / Backward</span>
+          </div>
+          <div class="control-item">
+            <span class="kbd">◄</span> / <span class="kbd">►</span>
+            <span class="desc">Rotate Left / Right</span>
+          </div>
+          <div class="control-item wide">
+            <span class="kbd space">SPACEBAR</span>
+            <span class="desc">Fire Plasma Rifle</span>
+          </div>
+          <div class="control-item">
+            <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>
+            <span class="desc">Alternative Movement</span>
+          </div>
+          <div class="control-item">
+            <span class="kbd">MOUSE</span>
+            <span class="desc">Aim Look (Optional)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-box">
+        <div class="setting-item">
+          <label for="difficulty-select">AI DIFFICULTY:</label>
+          <select id="difficulty-select">
+            <option value="easy">EASY (ROOKIE BOT)</option>
+            <option value="normal" selected>NORMAL (CYBER MECH)</option>
+            <option value="hard">HARD (APEX TERMINATOR)</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label for="sound-toggle">AUDIO SYNTH:</label>
+          <button id="sound-toggle" class="toggle-btn active">ENABLED 🔊</button>
+        </div>
+      </div>
+
+      <button id="start-btn" class="cyber-btn primary">START MATCH</button>
+    </div>
+  </div>
+
+  <!-- Round End / Game Over Screen Modal -->
+  <div id="game-over-screen" class="modal-overlay hidden">
+    <div class="modal-card glass-card">
+      <h2 id="result-title" class="result-win">VICTORY!</h2>
+      <p id="result-subtitle">BOT MECH DESTROYED</p>
+
+      <div class="stats-summary glass-card">
+        <div class="summary-row">
+          <span>Final Score</span>
+          <strong id="final-score">0 - 0</strong>
+        </div>
+        <div class="summary-row">
+          <span>Damage Dealt</span>
+          <strong id="final-damage-dealt">0</strong>
+        </div>
+        <div class="summary-row">
+          <span>Accuracy</span>
+          <strong id="final-accuracy">0%</strong>
+        </div>
+        <div class="summary-row">
+          <span>Match Duration</span>
+          <strong id="final-time">00:00</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="next-round-btn" class="cyber-btn primary">NEXT ROUND</button>
+        <button id="restart-game-btn" class="cyber-btn secondary">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
